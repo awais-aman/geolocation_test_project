@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+if ! docker compose ps --status running --services 2>/dev/null | grep -qx web; then
+  echo "Containers not running. Starting with: docker compose up -d"
+  docker compose up -d
+  echo "Waiting for database..."
+  sleep 3
+fi
+
+exec docker compose exec -it web bash --rcfile /app/bin/docker-shell-init.sh

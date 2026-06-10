@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Database setup runs automatically on `make up` via docker-entrypoint.
+# Use this to re-run migrate + seed on an already-running stack.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+if ! docker compose ps --status running --services 2>/dev/null | grep -qx web; then
+  echo "Starting containers first..."
+  docker compose up -d
+  sleep 3
+fi
+
+exec docker compose exec web bundle exec rake db:migrate db:seed

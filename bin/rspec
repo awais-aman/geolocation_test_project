@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+docker compose run --rm \
+  -e RACK_ENV=test \
+  -e DATABASE_HOST=db \
+  -e DATABASE_NAME=geolocation_api_test \
+  -e IPSTACK_ACCESS_KEY=test \
+  web sh -c 'bundle exec rake db:create db:migrate 2>/dev/null || true; bundle exec rspec "$@"' _ "$@"

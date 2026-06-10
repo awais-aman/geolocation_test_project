@@ -1,0 +1,414 @@
+openapi: 3.0.3
+info:
+  title: Geolocation API
+  version: 1.0.0
+  description: |
+    REST API for resolving and storing geolocation data from IP addresses and URLs.
+
+    **Authentication:** Run `make credentials` to get `client_id` + `client_secret`, then
+    `POST /api/v1/auth/login`. Use the JWT as `Authorization: Bearer <token>` on other routes.
+
+    Responses follow [JSON:API](https://jsonapi.org/) conventions (`application/vnd.api+json`).
+
+servers:
+  - url: http://localhost:9292
+    description: Local Docker (set APP_PORT in .env)
+  - url: http://localhost:3001
+    description: Default Docker port
+
+tags:
+  - name: Auth
+    description: Obtain a JWT access token
+  - name: Geolocations
+    description: CRUD and lookup for geolocation records
+
+paths:
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with API client credentials
+      description: Returns a Bearer JWT valid for 24 hours. Public — no token required.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginRequest"
+            example:
+              data:
+                type: auth_sessions
+                attributes:
+                  client_id: default
+                  client_secret: gloc_from_make_credentials
+      responses:
+        "200":
+          description: JWT issued
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/geolocations:
+    get:
+      tags: [Geolocations]
+      summary: List geolocations
+      description: Returns stored records from the database (does not call ipstack).
+      parameters:
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PageNumber"
+        - name: filter[query_type]
+          in: query
+          schema:
+            type: string
+            enum: [ip, url]
+          description: Filter by query type
+        - name: filter[query]
+          in: query
+          schema:
+            type: string
+          description: Filter by query value or resolved IP
+      responses:
+        "200":
+          description: Paginated collection
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: "#/components/schemas/GeolocationCollection"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Geolocations]
+      summary: Create a geolocation
+      description: Resolves the query via ipstack and persists the result.
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: "#/components/schemas/GeolocationCreateRequest"
+            examples:
+              ip:
+                summary: IP address
+                value:
+                  data:
+                    type: geolocations
+                    attributes:
+                      query: 8.8.4.4
+              url:
+                summary: URL
+                value:
+                  data:
+                    type: geolocations
+                    attributes:
+                      query: https://example.com
+      responses:
+        "201":
+          description: Created
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: "#/components/schemas/GeolocationSingle"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/InvalidQuery"
+        "502":
+          $ref: "#/components/responses/ProviderError"
+        "503":
+          $ref: "#/components/responses/ProviderMisconfigured"
+
+  /api/v1/geolocations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/GeolocationId"
+    get:
+      tags: [Geolocations]
+      summary: Show one geolocation
+      responses:
+        "200":
+          description: Single resource
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: "#/components/schemas/GeolocationSingle"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Geolocations]
+      summary: Delete a geolocation
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT from POST /api/v1/auth/login
+
+  parameters:
+    GeolocationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    PageSize:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+      description: Records per page (default 50, max 100)
+    PageNumber:
+      name: page_number
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number (1-based)
+
+  schemas:
+    JsonApiVersion:
+      type: object
+      properties:
+        version:
+          type: string
+          example: "1.1"
+
+    AuthLoginRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [type, attributes]
+          properties:
+            type:
+              type: string
+              enum: [auth_sessions]
+            attributes:
+              type: object
+              required: [client_id, client_secret]
+              properties:
+                client_id:
+                  type: string
+                  example: default
+                client_secret:
+                  type: string
+                  example: gloc_abc123
+
+    AuthLoginResponse:
+      type: object
+      properties:
+        jsonapi:
+          $ref: "#/components/schemas/JsonApiVersion"
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              example: auth_sessions
+            id:
+              type: string
+              example: current
+            attributes:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                token_type:
+                  type: string
+                  example: Bearer
+                expires_in:
+                  type: integer
+                  example: 86400
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+
+    GeolocationAttributes:
+      type: object
+      properties:
+        query_type:
+          type: string
+          enum: [ip, url]
+        query_value:
+          type: string
+        resolved_ip:
+          type: string
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        country_name:
+          type: string
+        country_code:
+          type: string
+        region_name:
+          type: string
+        city:
+          type: string
+        provider:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    GeolocationResource:
+      type: object
+      properties:
+        type:
+          type: string
+          example: geolocations
+        id:
+          type: string
+        attributes:
+          $ref: "#/components/schemas/GeolocationAttributes"
+
+    GeolocationSingle:
+      type: object
+      properties:
+        jsonapi:
+          $ref: "#/components/schemas/JsonApiVersion"
+        data:
+          $ref: "#/components/schemas/GeolocationResource"
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+
+    GeolocationCollection:
+      type: object
+      properties:
+        jsonapi:
+          $ref: "#/components/schemas/JsonApiVersion"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeolocationResource"
+        meta:
+          type: object
+          properties:
+            total:
+              type: integer
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+
+    GeolocationCreateRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [type, attributes]
+          properties:
+            type:
+              type: string
+              enum: [geolocations]
+            attributes:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  description: IP address, URL, or hostname
+
+    JsonApiError:
+      type: object
+      properties:
+        status:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+        code:
+          type: string
+
+    JsonApiErrorDocument:
+      type: object
+      properties:
+        jsonapi:
+          $ref: "#/components/schemas/JsonApiVersion"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/JsonApiError"
+
+  responses:
+    BadRequest:
+      description: Invalid JSON:API request body
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+    Unauthorized:
+      description: Missing or invalid JWT
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+    NotFound:
+      description: Resource not found
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+    Conflict:
+      description: Duplicate query (IP/URL already stored)
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+    InvalidQuery:
+      description: Invalid IP, URL, or hostname
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+    ProviderError:
+      description: ipstack provider error
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+    ProviderMisconfigured:
+      description: Missing IPSTACK_ACCESS_KEY
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: "#/components/schemas/JsonApiErrorDocument"
+
+security:
+  - bearerAuth: []
