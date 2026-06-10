@@ -13,7 +13,7 @@ module Geolocator
     end
 
     def self.provider_name
-      name.split("::").last.downcase
+      name.split('::').last.downcase
     end
   end
 end

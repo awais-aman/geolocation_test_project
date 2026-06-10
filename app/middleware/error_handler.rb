@@ -15,15 +15,15 @@ module Middleware
     rescue ActiveRecord::RecordNotUnique
       render_error(Geolocator::Errors::Conflict.new)
     rescue ActiveRecord::RecordInvalid => e
-      render_error(Geolocator::Errors::InvalidQuery.new(e.record.errors.full_messages.join(", ")))
+      render_error(Geolocator::Errors::InvalidQuery.new(e.record.errors.full_messages.join(', ')))
     rescue StandardError => e
       warn "[ERROR] #{e.class}: #{e.message}\n#{Array(e.backtrace).first(5).join("\n")}"
       render_error(
         Geolocator::Errors::Base.new(
-          "An unexpected error occurred",
-          code: "internal_error",
+          'An unexpected error occurred',
+          code: 'internal_error',
           status: :internal_server_error,
-          title: "Internal Server Error"
+          title: 'Internal Server Error'
         )
       )
     end
@@ -36,7 +36,7 @@ module Middleware
         errors: [api_error.to_h]
       }.to_json
       http_status = Rack::Utils.status_code(api_error.status)
-      [http_status, { "Content-Type" => "application/vnd.api+json" }, [error_response_body]]
+      [http_status, { 'Content-Type' => 'application/vnd.api+json' }, [error_response_body]]
     end
   end
 end

@@ -14,9 +14,9 @@ module Middleware
     end
 
     def call(env)
-      return @app.call(env) if public_path?(env["PATH_INFO"])
+      return @app.call(env) if public_path?(env['PATH_INFO'])
 
-      bearer_token = env["HTTP_AUTHORIZATION"]&.sub(/\ABearer\s+/i, "")
+      bearer_token = env['HTTP_AUTHORIZATION']&.sub(/\ABearer\s+/i, '')
       raise Geolocator::Errors::Unauthorized unless Auth::JwtToken.valid?(bearer_token)
 
       @app.call(env)
@@ -27,8 +27,8 @@ module Middleware
     end
 
     def normalize_path(path)
-      normalized = path.to_s.chomp("/")
-      normalized.empty? ? "/" : normalized
+      normalized = path.to_s.chomp('/')
+      normalized.empty? ? '/' : normalized
     end
   end
 end

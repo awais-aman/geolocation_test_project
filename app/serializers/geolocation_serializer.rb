@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class GeolocationSerializer
-  TYPE = "geolocations"
-  JSONAPI_VERSION = "1.1"
+  TYPE = 'geolocations'
+  JSONAPI_VERSION = '1.1'
 
   def self.render(resource, self_link: nil)
     if resource.is_a?(Geolocation)
@@ -50,7 +50,7 @@ class GeolocationSerializer
   end
 
   def self.decimal_to_float(decimal_value)
-    decimal_value.nil? ? nil : decimal_value.to_f
+    decimal_value&.to_f
   end
 
   private_class_method :json_api_response, :document, :attributes_for, :decimal_to_float

@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
-require "rack/test"
-require "factory_bot"
+require 'rack/test'
+require 'factory_bot'
 
 FactoryBot.find_definitions
 
 # Share one DB connection so Rack requests roll back with the example transaction.
-class ActiveRecord::Base
-  mattr_accessor :shared_connection
+module ActiveRecord
+  class Base
+    mattr_accessor :shared_connection
+  end
 end
 
 module RequestHelpers
@@ -20,13 +22,13 @@ module RequestHelpers
   end
 
   def auth_headers(client_id: test_client_id, client_secret: test_client_secret)
-    post "/api/v1/auth/login",
-         json_api_payload({ client_id: client_id, client_secret: client_secret }, type: "auth_sessions")
+    post '/api/v1/auth/login',
+         json_api_payload({ client_id: client_id, client_secret: client_secret }, type: 'auth_sessions')
 
-    token = json.dig("data", "attributes", "access_token")
+    token = json.dig('data', 'attributes', 'access_token')
     {
-      "HTTP_AUTHORIZATION" => "Bearer #{token}",
-      "CONTENT_TYPE" => "application/vnd.api+json"
+      'HTTP_AUTHORIZATION' => "Bearer #{token}",
+      'CONTENT_TYPE' => 'application/vnd.api+json'
     }
   end
 
@@ -40,13 +42,13 @@ module RequestHelpers
 
   def test_credentials
     @test_credentials ||= begin
-      client_id = "rspec"
+      client_id = 'rspec'
       _client, client_secret = ApiClient.register!(name: client_id)
       { client_id: client_id, client_secret: client_secret }
     end
   end
 
-  def json_api_payload(attributes = {}, type: "geolocations", **keyword_attributes)
+  def json_api_payload(attributes = {}, type: 'geolocations', **keyword_attributes)
     attrs = attributes.empty? ? keyword_attributes : attributes
 
     {
@@ -63,7 +65,7 @@ RSpec.configure do |config|
     Database.connect!
     ActiveRecord::Base.shared_connection = ActiveRecord::Base.connection
 
-    next unless Database.env == "test"
+    next unless Database.env == 'test'
 
     connection = ActiveRecord::Base.connection
     connection.tables.each do |table|

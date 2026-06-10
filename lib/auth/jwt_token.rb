@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "jwt"
-require "securerandom"
+require 'jwt'
+require 'securerandom'
 
 module Auth
   class JwtToken
-    ALGORITHM = "HS256"
+    ALGORITHM = 'HS256'
     EXPIRY_SECONDS = 86_400
 
     class << self

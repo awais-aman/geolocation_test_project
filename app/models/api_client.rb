@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "digest"
-require "securerandom"
-require "active_support/security_utils"
+require 'digest'
+require 'securerandom'
+require 'active_support/security_utils'
 
 class ApiClient < ApplicationRecord
-  SECRET_PREFIX = "gloc_"
+  SECRET_PREFIX = 'gloc_'
 
   validates :name, presence: true, uniqueness: true
   validates :secret_digest, presence: true, uniqueness: true

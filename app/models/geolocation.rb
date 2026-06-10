@@ -27,7 +27,7 @@ class Geolocation < ApplicationRecord
 
   def self.page_number(requested_number)
     number = requested_number.to_i
-    number < 1 ? 1 : number
+    [number, 1].max
   end
 
   private

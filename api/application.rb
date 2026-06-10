@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "sinatra/base"
-require "sinatra/namespace"
-require "rack/cors"
+require 'sinatra/base'
+require 'sinatra/namespace'
+require 'rack/cors'
 
 module Api
   class Application < Sinatra::Base
@@ -16,16 +16,16 @@ module Api
 
     use Rack::Cors do
       allow do
-        origins ENV.fetch("CORS_ORIGINS", "*").split(",").map(&:strip)
-        resource "*", headers: :any, methods: %i[get post delete options head]
+        origins ENV.fetch('CORS_ORIGINS', '*').split(',').map(&:strip)
+        resource '*', headers: :any, methods: %i[get post delete options head]
       end
     end
 
     use Middleware::ErrorHandler
     use Middleware::Authentication
 
-    before "/api/*" do
-      content_type "application/vnd.api+json"
+    before '/api/*' do
+      content_type 'application/vnd.api+json'
     end
 
     register Api::Swagger

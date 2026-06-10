@@ -1,4 +1,4 @@
-.PHONY: help up rebuild down logs bash run test coverage seed setup fresh credentials
+.PHONY: help up rebuild down logs bash run test coverage lint seed setup fresh credentials
 
 help:
 	@echo "Geolocation API (Docker only)"
@@ -8,6 +8,7 @@ help:
 	@echo "  make bash         shell in web container"
 	@echo "  make test         run rspec"
 	@echo "  make coverage     run rspec with SimpleCov"
+	@echo "  make lint         run rubocop"
 	@echo "  make fresh        reset DB and rebuild"
 
 up:
@@ -36,6 +37,9 @@ test:
 
 coverage:
 	bin/coverage
+
+lint:
+	bin/rubocop
 
 seed:
 	bin/run bundle exec rake db:seed

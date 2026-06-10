@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "sinatra/base"
+require 'sinatra/base'
 
 module Api
   module Swagger
-    OPENAPI_PATH = File.join(ROOT, "openapi", "openapi.yaml")
+    OPENAPI_PATH = File.join(ROOT, 'openapi', 'openapi.yaml')
 
-    SWAGGER_UI_HTML = <<~HTML.freeze
+    SWAGGER_UI_HTML = <<~HTML
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -34,18 +34,18 @@ module Api
     HTML
 
     def self.registered(app)
-      app.get "/openapi.yaml" do
-        content_type "application/yaml"
+      app.get '/openapi.yaml' do
+        content_type 'application/yaml'
         send_file OPENAPI_PATH
       end
 
       app.get %r{/api-docs/?} do
-        content_type "text/html"
+        content_type 'text/html'
         SWAGGER_UI_HTML
       end
 
-      app.get "/" do
-        redirect "/api-docs"
+      app.get '/' do
+        redirect '/api-docs'
       end
     end
   end

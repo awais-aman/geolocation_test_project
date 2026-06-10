@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+docker compose run --rm --entrypoint "" \
+  -v "$(pwd):/app" \
+  web sh -c 'bundle install --quiet && bundle exec rubocop "$@"' _ "$@"

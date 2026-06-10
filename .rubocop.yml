@@ -1,0 +1,53 @@
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.2
+  SuggestExtensions: false
+  Exclude:
+    - "coverage/**/*"
+    - "tmp/**/*"
+    - "vendor/**/*"
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/AbcSize:
+  Max: 20
+  Exclude:
+    - "api/**/*"
+    - "app/middleware/**/*"
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "config/**/*"
+    - "api/**/*"
+    - "db/**/*"
+
+Metrics/MethodLength:
+  Max: 25
+  Exclude:
+    - "db/migrate/**/*"
+    - "api/**/*"
+
+RSpec/DescribeClass:
+  Exclude:
+    - "spec/api/**/*"
+
+RSpec/ExampleLength:
+  Max: 20
+
+RSpec/MultipleExpectations:
+  Max: 8
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always

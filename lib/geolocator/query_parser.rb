@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "ipaddr"
-require "resolv"
-require "uri"
+require 'ipaddr'
+require 'resolv'
+require 'uri'
 
 module Geolocator
   class QueryParser
@@ -17,24 +17,24 @@ module Geolocator
     end
 
     def parse
-      raise Errors::InvalidQuery, "Query cannot be blank" if @lookup_query.empty?
+      raise Errors::InvalidQuery, 'Query cannot be blank' if @lookup_query.empty?
 
       if ip_address?(@lookup_query)
         ip_address = normalize_ip(@lookup_query)
-        ParsedQuery.new(query_type: "ip", query_value: ip_address, resolved_ip: ip_address)
+        ParsedQuery.new(query_type: 'ip', query_value: ip_address, resolved_ip: ip_address)
       elsif url?(@lookup_query)
         hostname = extract_host_from_url(@lookup_query)
-        ParsedQuery.new(query_type: "url", query_value: hostname, resolved_ip: resolve_host(hostname))
+        ParsedQuery.new(query_type: 'url', query_value: hostname, resolved_ip: resolve_host(hostname))
       elsif hostname?(@lookup_query)
         hostname = normalize_host(@lookup_query)
-        ParsedQuery.new(query_type: "url", query_value: hostname, resolved_ip: resolve_host(hostname))
+        ParsedQuery.new(query_type: 'url', query_value: hostname, resolved_ip: resolve_host(hostname))
       else
-        raise Errors::InvalidQuery, "Query must be a valid IP address, URL, or hostname"
+        raise Errors::InvalidQuery, 'Query must be a valid IP address, URL, or hostname'
       end
     rescue IPAddr::InvalidAddressError
-      raise Errors::InvalidQuery, "Invalid IP address format"
+      raise Errors::InvalidQuery, 'Invalid IP address format'
     rescue URI::InvalidURIError
-      raise Errors::InvalidQuery, "URL format is invalid"
+      raise Errors::InvalidQuery, 'URL format is invalid'
     end
 
     private
@@ -48,7 +48,7 @@ module Geolocator
     end
 
     def hostname?(value)
-      value.include?(".") && !value.include?(" ")
+      value.include?('.') && !value.include?(' ')
     end
 
     def normalize_ip(value)
@@ -56,12 +56,12 @@ module Geolocator
     end
 
     def normalize_host(value)
-      value.downcase.split("/").first
+      value.downcase.split('/').first
     end
 
     def extract_host_from_url(value)
       host = URI.parse(value).host
-      raise Errors::InvalidQuery, "URL must include a hostname" if host.to_s.empty?
+      raise Errors::InvalidQuery, 'URL must include a hostname' if host.to_s.empty?
 
       host.downcase
     end
